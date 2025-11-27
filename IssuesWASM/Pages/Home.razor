@@ -1,0 +1,29 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Blazor WASM Debug Crash Reproduction</h1>
+
+<p>This project reproduces the .NET 10 Blazor WebAssembly debugger crash.</p>
+
+<h2>Issue Summary</h2>
+<ul>
+    <li><strong>Platform:</strong> Blazor WebAssembly standalone (.NET 10)</li>
+    <li><strong>Symptom:</strong> Debugger crashes with Mono assertion when HttpClient.GetAsync is called in an async method</li>
+    <li><strong>Error:</strong> <code>[MONO] * Assertion: should not be reached at class-accessors.c:93</code></li>
+</ul>
+
+<h2>Steps to Reproduce</h2>
+<ol>
+    <li>Ensure ASP.NET JavaScript debugging is enabled in Visual Studio</li>
+    <li>Navigate to <a href="/crashdemo">Crash Demo</a></li>
+    <li>Set a breakpoint in <code>LoadDataAsync</code> method</li>
+    <li>Press F5 to start debugging</li>
+    <li>Observe the crash in browser console and VS Output window</li>
+</ol>
+
+<h2>Expected Behavior</h2>
+<p>Debugger should continue normally and allow stepping through HttpClient calls.</p>
+
+<h2>Actual Behavior</h2>
+<p>Mono WASM assertion crash, memory access violation, and JavaScript debug adapter crash with exit code 0xFFFFFFFF.</p>

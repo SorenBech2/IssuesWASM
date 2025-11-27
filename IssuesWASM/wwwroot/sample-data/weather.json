@@ -1,0 +1,27 @@
+﻿[
+  {
+    "date": "2024-01-01",
+    "temperatureC": 5,
+    "summary": "Cool"
+  },
+  {
+    "date": "2024-01-02",
+    "temperatureC": 8,
+    "summary": "Mild"
+  },
+  {
+    "date": "2024-01-03",
+    "temperatureC": 12,
+    "summary": "Warm"
+  },
+  {
+    "date": "2024-01-04",
+    "temperatureC": -2,
+    "summary": "Freezing"
+  },
+  {
+    "date": "2024-01-05",
+    "temperatureC": 15,
+    "summary": "Balmy"
+  }
+]

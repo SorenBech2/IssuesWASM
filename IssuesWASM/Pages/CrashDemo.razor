@@ -1,0 +1,128 @@
+﻿@page "/crashdemo"
+@inject HttpClient Http
+@inject ILogger<CrashDemo> Logger
+
+<PageTitle>Crash Demo</PageTitle>
+
+<h1>Debug Crash Demonstration</h1>
+
+<p>This page triggers the .NET 10 WASM debugger crash.</p>
+
+<div class="alert alert-warning">
+    <strong>Instructions:</strong>
+    <ol>
+        <li>Set a breakpoint in the <code>LoadDataAsync</code> method below</li>
+        <li>Ensure ASP.NET JS debugging is enabled in Visual Studio</li>
+        <li>Start debugging (F5)</li>
+        <li>The crash should occur when the HttpClient.GetAsync call is executed</li>
+    </ol>
+</div>
+
+@if (data == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (error != null)
+{
+    <div class="alert alert-danger">
+        <strong>Error:</strong> @error
+    </div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in data)
+            {
+                <tr>
+                    <td>@item.Date.ToShortDateString()</td>
+                    <td>@item.TemperatureC</td>
+                    <td>@item.TemperatureF</td>
+                    <td>@item.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="mt-3">
+    <button class="btn btn-primary" @onclick="ReloadData">Reload Data</button>
+</div>
+
+@code {
+    private WeatherForecast[]? data;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        data = null;
+        error = null;
+
+        try
+        {
+            // SET BREAKPOINT ON THE NEXT LINE
+            await LoadDataAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            Logger.LogError(ex, "Error loading data");
+        }
+    }
+
+    private async Task LoadDataAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            Logger.LogInformation("Starting data load...");
+
+            // THIS LINE TRIGGERS THE CRASH
+            // Mono assertion: "should not be reached at /__w/1/s/src/runtime/src/mono/mono/metadata/class-accessors.c:93"
+            var response = await Http.GetAsync("sample-data/weather.json", HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.LogWarning("HTTP request failed: {Status}", response.StatusCode);
+                error = $"HTTP {response.StatusCode}";
+                return;
+            }
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            data = System.Text.Json.JsonSerializer.Deserialize<WeatherForecast[]>(content,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            Logger.LogInformation("Data loaded successfully: {Count} items", data?.Length ?? 0);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in LoadDataAsync");
+            throw;
+        }
+    }
+
+    private async Task ReloadData()
+    {
+        await LoadData();
+    }
+
+    public class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        public string? Summary { get; set; }
+    }
+}
